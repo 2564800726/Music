@@ -22,33 +22,14 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.Musi
     public MusicListAdapter(MusicListActivity.Holder mHolder) {
         this.musics = MyMusicPlayer.musics;
         this.mHolder = mHolder;
+        MyMusicPlayer.playMusic(MyMusicPlayer.getCurrentIndex());
+        MyMusicPlayer.pauseMusic();
+        mHolder.updateUI();
     }
 
     @NonNull
     @Override
     public MusicListAdapter.MusicHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        MyMusicPlayer.playMusic(MyMusicPlayer.getCurrentIndex());
-        MyMusicPlayer.pauseMusic();
-        mHolder.updateUI();
-
-        mHolder.mNext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                MyMusicPlayer.playNext();
-                mHolder.updateUI();
-            }
-        });
-        mHolder.mPlayOrPause.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (MyMusicPlayer.isPlaying()) {
-                    MyMusicPlayer.pauseMusic();
-                } else {
-                    MyMusicPlayer.play();
-                }
-                mHolder.updateUI();
-            }
-        });
         return new MusicHolder(LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.music_item, viewGroup, false));
     }

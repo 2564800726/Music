@@ -1,6 +1,7 @@
 package com.blogofyb.music.view.activities;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -33,6 +34,7 @@ public class MusicListActivity extends BasedActivity implements View<List<MusicB
     private Presenter<List<MusicBean>> mPresenter;
     private Holder mHolder;
     private ConstraintLayout mConsole;
+    private BroadcastReceiver mReceiver;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -73,6 +75,8 @@ public class MusicListActivity extends BasedActivity implements View<List<MusicB
         super.onDestroy();
         unbindService(PlayMusicServiceConnection.getInstance());
         mPresenter.detached();
+        unregisterReceiver(mReceiver);
+        MyMusicPlayer.musics = null;
     }
 
     private void bindService() {
@@ -119,8 +123,8 @@ public class MusicListActivity extends BasedActivity implements View<List<MusicB
         filter.addAction(getPackageName() + ".broadcast.play");
         filter.addAction(getPackageName() + ".broadcast.previous");
         filter.addAction(getPackageName() + ".broadcast.next");
-        MyBroadcastReceiver receiver = new MyBroadcastReceiver(mHolder);
-        registerReceiver(receiver, filter);
+        mReceiver = new MyBroadcastReceiver(mHolder);
+        registerReceiver(mReceiver, filter);
     }
 
     public class Holder {
@@ -136,6 +140,25 @@ public class MusicListActivity extends BasedActivity implements View<List<MusicB
             mNext = findViewById(R.id.iv_next);
             mSongName = findViewById(R.id.tv_song_name);
             mLyric = findViewById(R.id.tv_lyric);
+
+            mNext.setOnClickListener(new android.view.View.OnClickListener() {
+                @Override
+                public void onClick(android.view.View v) {
+                    MyMusicPlayer.playNext();
+                    mHolder.updateUI();
+                }
+            });
+            mPlayOrPause.setOnClickListener(new android.view.View.OnClickListener() {
+                @Override
+                public void onClick(android.view.View v) {
+                    if (MyMusicPlayer.isPlaying()) {
+                        MyMusicPlayer.pauseMusic();
+                    } else {
+                        MyMusicPlayer.play();
+                    }
+                    updateUI();
+                }
+            });
         }
 
         public void updateUI() {
