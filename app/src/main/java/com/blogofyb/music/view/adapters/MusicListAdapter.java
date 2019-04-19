@@ -28,21 +28,25 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.Musi
     @Override
     public MusicListAdapter.MusicHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         MyMusicPlayer.playMusic(MyMusicPlayer.getCurrentIndex());
-        updateUI(MyMusicPlayer.getCurrentIndex());
         MyMusicPlayer.pauseMusic();
+        mHolder.updateUI();
 
         mHolder.mNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 MyMusicPlayer.playNext();
-                MyMusicPlayer.pauseMusic();
-                updateUI(MyMusicPlayer.getCurrentIndex());
+                mHolder.updateUI();
             }
         });
         mHolder.mPlayOrPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                changePlayStatus();
+                if (MyMusicPlayer.isPlaying()) {
+                    MyMusicPlayer.pauseMusic();
+                } else {
+                    MyMusicPlayer.play();
+                }
+                mHolder.updateUI();
             }
         });
         return new MusicHolder(LayoutInflater.from(viewGroup.getContext())
@@ -58,8 +62,7 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.Musi
             @Override
             public void onClick(View v) {
                 MyMusicPlayer.playMusic(musicHolder.getAdapterPosition());
-                MyMusicPlayer.pauseMusic();
-                updateUI(musicHolder.getAdapterPosition());
+                mHolder.updateUI();
             }
         });
     }
@@ -69,31 +72,14 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.Musi
         return musics.size();
     }
 
-    public static class MusicHolder extends RecyclerView.ViewHolder {
+    static class MusicHolder extends RecyclerView.ViewHolder {
         private TextView song;
         private TextView singer;
 
-        public MusicHolder(@NonNull View itemView) {
+        MusicHolder(@NonNull View itemView) {
             super(itemView);
             song = itemView.findViewById(R.id.tv_song_name_item);
             singer = itemView.findViewById(R.id.tv_singer_item);
         }
-    }
-
-    private void changePlayStatus() {
-        if (PlayMusicServiceConnection.getInstance().isPlaying()) {
-            mHolder.mPlayOrPause.setImageResource(R.drawable.pause);
-            MyMusicPlayer.pauseMusic();
-        } else {
-            mHolder.mPlayOrPause.setImageResource(R.drawable.play);
-            MyMusicPlayer.play();
-        }
-    }
-
-    private void updateUI(int index) {
-        MusicBean music = musics.get(index);
-        mHolder.mSongName.setText(music.getName());
-        mHolder.mLyric.setText(music.getSinger());
-        changePlayStatus();
     }
 }

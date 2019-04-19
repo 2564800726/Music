@@ -17,20 +17,24 @@ public class MyMusicPlayer {
             currentIndex += 1;
         }
         playMusic(currentIndex);
+        connection.updateNotification();
     }
 
     public static void pauseMusic() {
         connection.pauseMusic();
+        connection.updateNotification();
     }
 
     public static void playMusic(int index) {
         currentIndex = index;
         MusicBean music = musics.get(index);
         connection.playMusic(music.getAbsolutePath());
+        connection.updateNotification();
     }
 
     public static void play() {
         connection.playMusic();
+        connection.updateNotification();
     }
 
     public static int getCurrentIndex() {
@@ -44,6 +48,7 @@ public class MyMusicPlayer {
             currentIndex -= 1;
         }
         playMusic(currentIndex);
+        connection.updateNotification();
     }
 
     public static int total() {
