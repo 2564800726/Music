@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Music</string>
+    <string name="unknown_song_name">Unknown</string>
+</resources>
