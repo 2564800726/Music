@@ -52,19 +52,21 @@ public class ScanningLocalMusic implements Model<List<MusicBean>> {
         }
         for (File fileItem : files) {
             if (fileItem.getName().endsWith(".mp3")) {
-                addMusicBean(fileItem);
+                addMusicBean(fileItem, ".mp3");
+            } else if (fileItem.getName().endsWith(".flac")) {
+                addMusicBean(fileItem, ".flac");
             }
             scanningMusicFromDisk(fileItem.listFiles());
         }
     }
 
-    private void addMusicBean(File file) {
+    private void addMusicBean(File file, String ends) {
         MusicBean music = new MusicBean();
         try {
-            music.setName(file.getName().split(" - ")[1].split(".mp3")[0]);
+            music.setName(file.getName().split(" - ")[1].split(ends)[0]);
             music.setSinger(file.getName().split(" - ")[0]);
         } catch (ArrayIndexOutOfBoundsException e) {
-            music.setName(file.getName().split(".mp3")[0]);
+            music.setName(file.getName().split(ends)[0]);
             music.setSinger("Unknown");
         }
         music.setAbsolutePath(file.getAbsolutePath());
