@@ -36,6 +36,8 @@ public class MusicListActivity extends BasedActivity implements View<List<MusicB
     private ConstraintLayout mConsole;
     private BroadcastReceiver mReceiver;
     private PlayCallback mCallback;
+    private ImageView mPlayOrPause;
+    private ImageView mNext;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -43,11 +45,13 @@ public class MusicListActivity extends BasedActivity implements View<List<MusicB
         setContentView(R.layout.layout_music_list);
         mMusics = findViewById(R.id.rv_music_list);
 
-        ImageView mPlayOrPause = findViewById(R.id.iv_play_status);
+        mPlayOrPause = findViewById(R.id.iv_play_status);
         mPlayOrPause.setOnClickListener(this);
+        mPlayOrPause.setClickable(false);
 
-        ImageView mNext = findViewById(R.id.iv_next);
+        mNext = findViewById(R.id.iv_next);
         mNext.setOnClickListener(this);
+        mNext.setClickable(false);
 
         mPresenter = new LocalMusicPresenter();
         if (!mPresenter.isAttached()) {
@@ -95,6 +99,8 @@ public class MusicListActivity extends BasedActivity implements View<List<MusicB
     public void onSuccess(List<MusicBean> data) {
         MyMusicPlayer.musics = data;
         mConsole.setClickable(true);
+        mPlayOrPause.setClickable(true);
+        mNext.setClickable(true);
         mMusics.setLayoutManager(new LinearLayoutManager(this));
         mMusics.setAdapter(new MusicListAdapter());
     }
