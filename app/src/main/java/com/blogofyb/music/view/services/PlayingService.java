@@ -1,22 +1,16 @@
 package com.blogofyb.music.view.services;
 
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
-import android.support.v4.app.NotificationCompat;
-import android.widget.RemoteViews;
 
-import com.blogofyb.music.R;
-import com.blogofyb.music.utils.beans.MusicBean;
 import com.blogofyb.music.utils.callbacks.NotificationCallback;
 import com.blogofyb.music.utils.interfaces.PlayCallback;
+import com.blogofyb.music.utils.interfaces.PlayStyle;
 import com.blogofyb.music.utils.music.MyMusicPlayer;
+import com.blogofyb.music.utils.playstyles.LoopPlayStyle;
 
 import java.io.IOException;
 
@@ -24,6 +18,7 @@ public class PlayingService extends Service {
     private PlayMusicBinder mBinder = new PlayMusicBinder();
     private MediaPlayer mPlayer;
     private PlayCallback mCallback;
+    private PlayStyle mPlayStyle;
     public static final int NOTIFICATION_ID = 1;
 
     @Override
@@ -34,7 +29,14 @@ public class PlayingService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        mPlayStyle = new LoopPlayStyle();
         mPlayer = new MediaPlayer();
+        mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                mPlayStyle.playNext(PlayStyle.FLAG_AUTO);
+            }
+        });
         mCallback = new NotificationCallback();
         registerCallback();
         startForeground(NOTIFICATION_ID, ((NotificationCallback) mCallback).notification());
@@ -98,6 +100,10 @@ public class PlayingService extends Service {
 
         public int getCurrentProgress() {
             return mPlayer.getCurrentPosition();
+        }
+
+        public void setPlayStyle(PlayStyle style) {
+            mPlayStyle = style;
         }
     }
 }

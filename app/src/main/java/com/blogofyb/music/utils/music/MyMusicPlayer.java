@@ -1,11 +1,9 @@
 package com.blogofyb.music.utils.music;
 
-import android.util.Log;
-
 import com.blogofyb.music.utils.beans.MusicBean;
 import com.blogofyb.music.utils.interfaces.PlayCallback;
 import com.blogofyb.music.utils.interfaces.PlayStyle;
-import com.blogofyb.music.utils.playstyles.LoopPlayback;
+import com.blogofyb.music.utils.playstyles.LoopPlayStyle;
 import com.blogofyb.music.view.connections.PlayMusicServiceConnection;
 import com.blogofyb.tools.thread.ThreadManager;
 
@@ -18,7 +16,7 @@ public class MyMusicPlayer {
     public static List<MusicBean> musics;
     private static PlayMusicServiceConnection connection = PlayMusicServiceConnection.getInstance();
     private static int currentIndex = 0;
-    private static PlayStyle playStyle = new LoopPlayback();
+    private static PlayStyle playStyle = new LoopPlayStyle();
     private static List<PlayCallback> callbacks = new ArrayList<>();
     private static Timer timer = new Timer();
 
@@ -30,10 +28,6 @@ public class MyMusicPlayer {
                     @Override
                     public void run() {
                         if (musics != null) {
-                            Log.e("TAG ", current() + " " + total());
-                            if (current() == total()) {
-                                onEnd();
-                            }
                             onPlayStatusChanged();
                         }
                     }
@@ -43,7 +37,7 @@ public class MyMusicPlayer {
     }
 
     public static void playNext() {
-        playStyle.playNext();
+        playStyle.playNext(PlayStyle.FLAG_USER);
     }
 
     public static void pauseMusic() {
@@ -65,7 +59,7 @@ public class MyMusicPlayer {
     }
 
     public static void playPrevious() {
-        playStyle.playPrevious();
+        playStyle.playPrevious(PlayStyle.FLAG_USER);
     }
 
     public static int total() {
@@ -86,6 +80,7 @@ public class MyMusicPlayer {
 
     public static void changePlayStyle(PlayStyle playStyle) {
         MyMusicPlayer.playStyle = playStyle;
+        connection.setPlayStyle(playStyle);
     }
 
     /**
@@ -102,14 +97,6 @@ public class MyMusicPlayer {
      */
     public static void unregisterCallback(PlayCallback callback) {
         callbacks.remove(callback);
-    }
-
-    /**
-     * 音乐播放完毕的时候调用
-     */
-    private static void onEnd() {
-        Log.e("TAG", " end");
-        playStyle.playNext();
     }
 
     /**

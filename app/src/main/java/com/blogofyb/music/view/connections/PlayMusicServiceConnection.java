@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 
+import com.blogofyb.music.utils.interfaces.PlayStyle;
 import com.blogofyb.music.view.services.PlayingService;
 
 public class PlayMusicServiceConnection implements ServiceConnection {
@@ -59,5 +60,9 @@ public class PlayMusicServiceConnection implements ServiceConnection {
 
     public boolean isPlaying() {
         return mBinder.isPlaying();
+    }
+
+    public void setPlayStyle(PlayStyle style) {
+        mBinder.setPlayStyle(style);
     }
 }

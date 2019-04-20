@@ -1,13 +1,12 @@
 package com.blogofyb.music.utils.playstyles;
 
-import com.blogofyb.music.utils.interfaces.PlayCallback;
 import com.blogofyb.music.utils.interfaces.PlayStyle;
 import com.blogofyb.music.utils.music.MyMusicPlayer;
 
-public class LoopPlayback implements PlayStyle {
+public class LoopPlayStyle implements PlayStyle {
 
     @Override
-    public void playNext() {
+    public void playNext(int flag) {
         int index = MyMusicPlayer.getCurrentIndex();
         if (MyMusicPlayer.getCurrentIndex() == MyMusicPlayer.musics.size() - 1) {
             index = 0;
@@ -18,7 +17,7 @@ public class LoopPlayback implements PlayStyle {
     }
 
     @Override
-    public void playPrevious() {
+    public void playPrevious(int flag) {
         int index = MyMusicPlayer.getCurrentIndex();
         if (MyMusicPlayer.getCurrentIndex() == 0) {
             index = MyMusicPlayer.musics.size() - 1;
