@@ -14,19 +14,17 @@ import android.widget.RemoteViews;
 
 import com.blogofyb.music.R;
 import com.blogofyb.music.utils.beans.MusicBean;
+import com.blogofyb.music.utils.callbacks.NotificationCallback;
+import com.blogofyb.music.utils.interfaces.PlayCallback;
 import com.blogofyb.music.utils.music.MyMusicPlayer;
-import com.blogofyb.music.view.activities.MusicListActivity;
 
 import java.io.IOException;
 
 public class PlayingService extends Service {
     private PlayMusicBinder mBinder = new PlayMusicBinder();
     private MediaPlayer mPlayer;
-    private NotificationManager mManager;
-    private RemoteViews mRemoteViews;
-    private Notification mNotification;
-
-    private final int NOTIFICATION_ID = 1;
+    private PlayCallback mCallback;
+    public static final int NOTIFICATION_ID = 1;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -37,16 +35,16 @@ public class PlayingService extends Service {
     public void onCreate() {
         super.onCreate();
         mPlayer = new MediaPlayer();
-        mManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        createRemoteViews();
-        mNotification = createNotification();
-        startForeground(NOTIFICATION_ID, mNotification);
+        mCallback = new NotificationCallback();
+        registerCallback();
+        startForeground(NOTIFICATION_ID, ((NotificationCallback) mCallback).notification());
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         mPlayer.release();
+        unregisterCallback();
     }
 
     @Override
@@ -54,30 +52,12 @@ public class PlayingService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private Notification createNotification() {
-        NotificationChannel channel = new NotificationChannel(getPackageName() + ".play", "Play Music", NotificationManager.IMPORTANCE_NONE);
-        final NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        manager.createNotificationChannel(channel);
-        Intent intent = new Intent(this, MusicListActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 3, intent, PendingIntent.FLAG_NO_CREATE);
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, getPackageName() + ".play");
-        return builder.setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setCustomBigContentView(mRemoteViews)
-                .setContentIntent(pendingIntent)
-                .build();
+    private void registerCallback() {
+        MyMusicPlayer.registerCallback(mCallback);
     }
 
-    private void createRemoteViews() {
-        mRemoteViews = new RemoteViews(getPackageName(), R.layout.music_console_notification);
-        Intent intentOfPlay = new Intent(getPackageName() + ".broadcast.play");
-        Intent intentOfPrevious = new Intent(getPackageName() + ".broadcast.previous");
-        Intent intentOfNext = new Intent(getPackageName() + ".broadcast.next");
-        PendingIntent pendingIntentOfPlay = PendingIntent.getBroadcast(this, 0, intentOfPlay, 0);
-        PendingIntent pendingIntentOfPrevious = PendingIntent.getBroadcast(this, 1, intentOfPrevious, 0);
-        PendingIntent pendingIntentOfNext = PendingIntent.getBroadcast(this, 2, intentOfNext, 0);
-        mRemoteViews.setOnClickPendingIntent(R.id.iv_next_music_notification, pendingIntentOfNext);
-        mRemoteViews.setOnClickPendingIntent(R.id.iv_play_music_notification, pendingIntentOfPlay);
-        mRemoteViews.setOnClickPendingIntent(R.id.iv_previous_music_notification, pendingIntentOfPrevious);
+    private void unregisterCallback() {
+        MyMusicPlayer.unregisterCallback(mCallback);
     }
 
     public class PlayMusicBinder extends Binder {
@@ -118,18 +98,6 @@ public class PlayingService extends Service {
 
         public int getCurrentProgress() {
             return mPlayer.getCurrentPosition();
-        }
-
-        public void updateNotification() {
-            MusicBean music = MyMusicPlayer.musics.get(MyMusicPlayer.getCurrentIndex());
-            mRemoteViews.setTextViewText(R.id.tv_song_name_notification, music.getName());
-            mRemoteViews.setTextViewText(R.id.tv_singer_notification, music.getSinger());
-            if (mPlayer.isPlaying()) {
-                mRemoteViews.setImageViewResource(R.id.iv_play_music_notification, R.drawable.play);
-            } else {
-                mRemoteViews.setImageViewResource(R.id.iv_play_music_notification, R.drawable.pause);
-            }
-            mManager.notify(NOTIFICATION_ID, mNotification);
         }
     }
 }

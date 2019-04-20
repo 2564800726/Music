@@ -1,40 +1,63 @@
 package com.blogofyb.music.utils.music;
 
-import com.blogofyb.music.utils.beans.MusicBean;
-import com.blogofyb.music.view.connections.PlayMusicServiceConnection;
+import android.util.Log;
 
+import com.blogofyb.music.utils.beans.MusicBean;
+import com.blogofyb.music.utils.interfaces.PlayCallback;
+import com.blogofyb.music.utils.interfaces.PlayStyle;
+import com.blogofyb.music.utils.playstyles.LoopPlayback;
+import com.blogofyb.music.view.connections.PlayMusicServiceConnection;
+import com.blogofyb.tools.thread.ThreadManager;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MyMusicPlayer {
     public static List<MusicBean> musics;
     private static PlayMusicServiceConnection connection = PlayMusicServiceConnection.getInstance();
     private static int currentIndex = 0;
+    private static PlayStyle playStyle = new LoopPlayback();
+    private static List<PlayCallback> callbacks = new ArrayList<>();
+    private static Timer timer = new Timer();
+
+    static {
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                ThreadManager.getInstance().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (musics != null) {
+                            Log.e("TAG ", current() + " " + total());
+                            if (current() == total()) {
+                                onEnd();
+                            }
+                            onPlayStatusChanged();
+                        }
+                    }
+                });
+            }
+        }, 0, 100);
+    }
 
     public static void playNext() {
-        if (currentIndex == musics.size() - 1) {
-            currentIndex = 0;
-        } else {
-            currentIndex += 1;
-        }
-        playMusic(currentIndex);
-        connection.updateNotification();
+        playStyle.playNext();
     }
 
     public static void pauseMusic() {
         connection.pauseMusic();
-        connection.updateNotification();
     }
 
     public static void playMusic(int index) {
         currentIndex = index;
         MusicBean music = musics.get(index);
         connection.playMusic(music.getAbsolutePath());
-        connection.updateNotification();
     }
 
     public static void play() {
         connection.playMusic();
-        connection.updateNotification();
     }
 
     public static int getCurrentIndex() {
@@ -42,13 +65,7 @@ public class MyMusicPlayer {
     }
 
     public static void playPrevious() {
-        if (currentIndex == 0) {
-            currentIndex = musics.size() -1;
-        } else {
-            currentIndex -= 1;
-        }
-        playMusic(currentIndex);
-        connection.updateNotification();
+        playStyle.playPrevious();
     }
 
     public static int total() {
@@ -65,5 +82,42 @@ public class MyMusicPlayer {
 
     public static boolean isPlaying() {
         return connection.isPlaying();
+    }
+
+    public static void changePlayStyle(PlayStyle playStyle) {
+        MyMusicPlayer.playStyle = playStyle;
+    }
+
+    /**
+     * 注册新的回调
+     * @param callback  需要注册的回调
+     */
+    public static void registerCallback(PlayCallback callback) {
+        callbacks.add(callback);
+    }
+
+    /**
+     * 取消注册
+     * @param callback  需要取消的回调
+     */
+    public static void unregisterCallback(PlayCallback callback) {
+        callbacks.remove(callback);
+    }
+
+    /**
+     * 音乐播放完毕的时候调用
+     */
+    private static void onEnd() {
+        Log.e("TAG", " end");
+        playStyle.playNext();
+    }
+
+    /**
+     * 播放状态改变的时候调用
+     */
+    private static void onPlayStatusChanged() {
+        for (PlayCallback callback : callbacks) {
+            callback.updateUI();
+        }
     }
 }

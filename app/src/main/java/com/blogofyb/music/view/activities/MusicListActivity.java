@@ -14,11 +14,12 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.blogofyb.music.R;
 import com.blogofyb.music.presenter.LocalMusicPresenter;
 import com.blogofyb.music.utils.beans.MusicBean;
+import com.blogofyb.music.utils.callbacks.MusicListCallback;
+import com.blogofyb.music.utils.interfaces.PlayCallback;
 import com.blogofyb.music.utils.interfaces.Presenter;
 import com.blogofyb.music.utils.interfaces.View;
 import com.blogofyb.music.utils.music.MyMusicPlayer;
@@ -29,24 +30,33 @@ import com.blogofyb.music.view.services.PlayingService;
 
 import java.util.List;
 
-public class MusicListActivity extends BasedActivity implements View<List<MusicBean>> {
+public class MusicListActivity extends BasedActivity implements View<List<MusicBean>>, android.view.View.OnClickListener {
     private RecyclerView mMusics;
     private Presenter<List<MusicBean>> mPresenter;
-    private Holder mHolder;
     private ConstraintLayout mConsole;
     private BroadcastReceiver mReceiver;
+    private PlayCallback mCallback;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.layout_music_list);
-        mHolder = new Holder();
-
         mMusics = findViewById(R.id.rv_music_list);
+
+        ImageView mPlayOrPause = findViewById(R.id.iv_play_status);
+        mPlayOrPause.setOnClickListener(this);
+
+        ImageView mNext = findViewById(R.id.iv_next);
+        mNext.setOnClickListener(this);
+
         mPresenter = new LocalMusicPresenter();
         if (!mPresenter.isAttached()) {
             mPresenter.attached(this);
         }
+
+        mConsole = findViewById(R.id.cl_console);
+        mConsole.setOnClickListener(this);
+        mConsole.setClickable(false);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -55,19 +65,12 @@ public class MusicListActivity extends BasedActivity implements View<List<MusicB
             mPresenter.getData();
         }
 
+        mCallback = new MusicListCallback();
+        mCallback.initWidgets(getWindow().getDecorView());
+
         registerReceiver();
-
+        registerCallback();
         bindService();
-
-        mConsole = findViewById(R.id.cl_console);
-        mConsole.setOnClickListener(new android.view.View.OnClickListener() {
-            @Override
-            public void onClick(android.view.View v) {
-                Intent intent = new Intent(MusicListActivity.this, PlayActivity.class);
-                startActivity(intent);
-            }
-        });
-        mConsole.setClickable(false);
     }
 
     @Override
@@ -76,12 +79,16 @@ public class MusicListActivity extends BasedActivity implements View<List<MusicB
         unbindService(PlayMusicServiceConnection.getInstance());
         mPresenter.detached();
         unregisterReceiver(mReceiver);
+        unregisterCallback();
         MyMusicPlayer.musics = null;
     }
 
-    private void bindService() {
-        Intent intent = new Intent(this, PlayingService.class);
-        bindService(intent, PlayMusicServiceConnection.getInstance(), BIND_AUTO_CREATE);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mMusics != null) {
+            registerCallback();
+        }
     }
 
     @Override
@@ -89,12 +96,32 @@ public class MusicListActivity extends BasedActivity implements View<List<MusicB
         MyMusicPlayer.musics = data;
         mConsole.setClickable(true);
         mMusics.setLayoutManager(new LinearLayoutManager(this));
-        mMusics.setAdapter(new MusicListAdapter(mHolder));
+        mMusics.setAdapter(new MusicListAdapter());
     }
 
     @Override
     public void onFailure() {
 
+    }
+
+    @Override
+    public void onClick(android.view.View v) {
+        switch (v.getId()) {
+            case R.id.iv_next:
+                MyMusicPlayer.playNext();
+                break;
+            case R.id.iv_play_status:
+                if (MyMusicPlayer.isPlaying()) {
+                    MyMusicPlayer.pauseMusic();
+                } else {
+                    MyMusicPlayer.play();
+                }
+                break;
+            case R.id.cl_console:
+                Intent intent = new Intent(MusicListActivity.this, PlayActivity.class);
+                startActivity(intent);
+                break;
+        }
     }
 
     @Override
@@ -110,12 +137,17 @@ public class MusicListActivity extends BasedActivity implements View<List<MusicB
         }
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (MyMusicPlayer.musics != null) {
-            mHolder.updateUI();
-        }
+    private void bindService() {
+        Intent intent = new Intent(this, PlayingService.class);
+        bindService(intent, PlayMusicServiceConnection.getInstance(), BIND_AUTO_CREATE);
+    }
+
+    private void registerCallback() {
+        MyMusicPlayer.registerCallback(mCallback);
+    }
+
+    private void unregisterCallback() {
+        MyMusicPlayer.unregisterCallback(mCallback);
     }
 
     private void registerReceiver() {
@@ -123,53 +155,7 @@ public class MusicListActivity extends BasedActivity implements View<List<MusicB
         filter.addAction(getPackageName() + ".broadcast.play");
         filter.addAction(getPackageName() + ".broadcast.previous");
         filter.addAction(getPackageName() + ".broadcast.next");
-        mReceiver = new MyBroadcastReceiver(mHolder);
+        mReceiver = new MyBroadcastReceiver();
         registerReceiver(mReceiver, filter);
-    }
-
-    public class Holder {
-        private ImageView mAlbum;
-        public ImageView mPlayOrPause;
-        public ImageView mNext;
-        private TextView mSongName;
-        private TextView mLyric;
-
-        private Holder() {
-            mAlbum = findViewById(R.id.iv_album_cover);
-            mPlayOrPause = findViewById(R.id.iv_play_status);
-            mNext = findViewById(R.id.iv_next);
-            mSongName = findViewById(R.id.tv_song_name);
-            mLyric = findViewById(R.id.tv_lyric);
-
-            mNext.setOnClickListener(new android.view.View.OnClickListener() {
-                @Override
-                public void onClick(android.view.View v) {
-                    MyMusicPlayer.playNext();
-                    mHolder.updateUI();
-                }
-            });
-            mPlayOrPause.setOnClickListener(new android.view.View.OnClickListener() {
-                @Override
-                public void onClick(android.view.View v) {
-                    if (MyMusicPlayer.isPlaying()) {
-                        MyMusicPlayer.pauseMusic();
-                    } else {
-                        MyMusicPlayer.play();
-                    }
-                    updateUI();
-                }
-            });
-        }
-
-        public void updateUI() {
-            MusicBean music = MyMusicPlayer.musics.get(MyMusicPlayer.getCurrentIndex());
-            mSongName.setText(music.getName());
-            mLyric.setText(music.getSinger());
-            if (MyMusicPlayer.isPlaying()) {
-                mPlayOrPause.setImageResource(R.drawable.play);
-            } else {
-                mPlayOrPause.setImageResource(R.drawable.pause);
-            }
-        }
     }
 }

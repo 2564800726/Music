@@ -60,8 +60,4 @@ public class PlayMusicServiceConnection implements ServiceConnection {
     public boolean isPlaying() {
         return mBinder.isPlaying();
     }
-
-    public void updateNotification() {
-        mBinder.updateNotification();
-    }
 }

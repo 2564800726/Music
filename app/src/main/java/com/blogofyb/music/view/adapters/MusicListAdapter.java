@@ -10,21 +10,16 @@ import android.widget.TextView;
 import com.blogofyb.music.R;
 import com.blogofyb.music.utils.beans.MusicBean;
 import com.blogofyb.music.utils.music.MyMusicPlayer;
-import com.blogofyb.music.view.activities.MusicListActivity;
-import com.blogofyb.music.view.connections.PlayMusicServiceConnection;
 
 import java.util.List;
 
 public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.MusicHolder> {
     private List<MusicBean> musics;
-    private MusicListActivity.Holder mHolder;
 
-    public MusicListAdapter(MusicListActivity.Holder mHolder) {
+    public MusicListAdapter() {
         this.musics = MyMusicPlayer.musics;
-        this.mHolder = mHolder;
         MyMusicPlayer.playMusic(MyMusicPlayer.getCurrentIndex());
         MyMusicPlayer.pauseMusic();
-        mHolder.updateUI();
     }
 
     @NonNull
@@ -43,7 +38,6 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.Musi
             @Override
             public void onClick(View v) {
                 MyMusicPlayer.playMusic(musicHolder.getAdapterPosition());
-                mHolder.updateUI();
             }
         });
     }
