@@ -38,8 +38,8 @@ public class NotificationCallback implements PlayCallback {
     public void updateUI() {
         if (flag == 200) {
             flag = 0;
-            createNotification();
             createRemoteViews();
+            createNotification();
         }
         MusicBean music = MyMusicPlayer.musics.get(MyMusicPlayer.getCurrentIndex());
         mRemoteViews.setTextViewText(R.id.tv_song_name_notification, music.getName());

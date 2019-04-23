@@ -83,8 +83,13 @@ public class MusicListActivity extends BasedActivity implements View<List<MusicB
         unbindService(PlayMusicServiceConnection.getInstance());
         mPresenter.detached();
         unregisterReceiver(mReceiver);
-        unregisterCallback();
         MyMusicPlayer.musics = null;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterCallback();
     }
 
     @Override
@@ -142,6 +147,9 @@ public class MusicListActivity extends BasedActivity implements View<List<MusicB
             finish();
         }
     }
+
+    @Override
+    public void onBackPressed() {}
 
     private void bindService() {
         Intent intent = new Intent(this, PlayingService.class);

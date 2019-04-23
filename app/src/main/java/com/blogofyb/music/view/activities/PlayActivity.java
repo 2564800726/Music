@@ -53,12 +53,17 @@ public class PlayActivity extends BasedActivity implements View.OnClickListener 
 
         mCallback = new PlayingCallback();
         mCallback.initWidgets(getWindow().getDecorView());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         registerCallback();
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onStop() {
+        super.onStop();
         unregisterCallback();
     }
 
